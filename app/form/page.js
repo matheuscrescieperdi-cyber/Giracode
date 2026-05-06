@@ -92,8 +92,8 @@ export default function SmartForm() {
       setIsFinished(true);
     } catch (err) {
       console.error('Erro ao salvar:', err);
-      // Mesmo com erro no Supabase (se não estiver configurado), mostramos sucesso para o usuário para não travar
-      setIsFinished(true);
+      alert('Erro ao salvar no Supabase: ' + err.message);
+      setIsFinished(true); 
     } finally {
       setIsSubmitting(false);
     }
