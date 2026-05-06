@@ -46,7 +46,7 @@ export default function SettingsPage() {
       <header style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 600 }}>Configurações do QR Code</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          Escolha como os usuários interagem ao escanear o seu código
+          Escolha como os usuários interagem ao escanear o seu código.
         </p>
       </header>
 
