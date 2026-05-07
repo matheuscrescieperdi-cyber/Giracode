@@ -54,11 +54,10 @@ const QUESTIONS = [
   },
   { 
     id: 'sexo_filhos', 
-    label: 'Qual o sexo?', // Será ajustado dinamicamente no componente
+    label: '', // Dinâmico
     type: 'select', 
-    options: [], // Será preenchido dinamicamente
-    section: 'Sobre sua família',
-    dependsOn: 'qtd_filhos'
+    options: [], // Dinâmico
+    section: 'Sobre sua família'
   },
   { 
     id: 'fase', 
@@ -105,53 +104,55 @@ export default function SmartForm() {
   const [error, setError] = useState('');
 
   // Lógica para filtrar as perguntas com base nas respostas anteriores
-  const getVisibleQuestions = () => {
-    return QUESTIONS.filter(q => {
-      if (q.id === 'sexo_filhos') {
-        const qtd = formData.qtd_filhos;
-        return qtd === '1 Pequeno' || qtd === '2 Pequenos' || qtd === '3 ou mais';
-      }
-      return true;
-    });
-  };
+  const visibleQuestions = QUESTIONS.filter(q => {
+    if (q.id === 'sexo_filhos') {
+      const qtd = formData.qtd_filhos;
+      return qtd === '1 Pequeno' || qtd === '2 Pequenos' || qtd === '3 ou mais';
+    }
+    return true;
+  });
 
-  const visibleQuestions = getVisibleQuestions();
   const currentQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
   const progress = ((currentStep + 1) / visibleQuestions.length) * 100;
 
-  // Ajustar opções da pergunta de sexo dinamicamente
-  useEffect(() => {
-    if (currentQuestion.id === 'sexo_filhos') {
+  // Obter labels e opções dinâmicas sem mutar o objeto original
+  const getDynamicQuestion = (q) => {
+    if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       if (qtd === '1 Pequeno') {
-        currentQuestion.label = 'É um menino ou uma menina?';
-        currentQuestion.options = ['Menino', 'Menina'];
+        return {
+          ...q,
+          label: 'É um menino ou uma menina?',
+          options: ['Menino', 'Menina']
+        };
       } else {
-        currentQuestion.label = 'Quais os sexos dos pequenos?';
-        currentQuestion.options = ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas'];
+        return {
+          ...q,
+          label: 'Quais os sexos dos pequenos?',
+          options: ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas']
+        };
       }
     }
-  }, [currentQuestion, formData.qtd_filhos]);
+    return q;
+  };
+
+  const activeQuestion = getDynamicQuestion(currentQuestion);
 
   const maskPhone = (value) => {
     let clean = value.replace(/\D/g, '');
     
-    // Se começar com 55 e tiver mais de 10 dígitos, remove o 55
     if (clean.startsWith('55') && clean.length > 10) {
       clean = clean.substring(2);
     }
 
-    // Limita a 11 dígitos (DDD + 9 dígitos)
     clean = clean.substring(0, 11);
 
     if (clean.length <= 10) {
-      // (11) 4444-4444
       return clean
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{4})(\d)/, '$1-$2')
         .replace(/(-\d{4})\d+?$/, '$1');
     } else {
-      // (11) 99999-9999
       return clean
         .replace(/(\d{2})(\d)/, '($1) $2')
         .replace(/(\d{5})(\d)/, '$1-$2')
@@ -167,12 +168,12 @@ export default function SmartForm() {
   };
 
   const validate = () => {
-    const value = formData[currentQuestion.id] || '';
+    const value = formData[activeQuestion.id] || '';
     
-    if (currentQuestion.type === 'select') return true;
+    if (activeQuestion.type === 'select') return true;
     if (!value) return false;
 
-    if (currentQuestion.id === 'email') {
+    if (activeQuestion.id === 'email') {
       const re = /\S+@\S+\.\S+/;
       if (!re.test(value)) {
         setError('Por favor, insira um e-mail válido.');
@@ -180,7 +181,7 @@ export default function SmartForm() {
       }
     }
 
-    if (currentQuestion.id === 'whatsapp') {
+    if (activeQuestion.id === 'whatsapp') {
       const digits = value.replace(/\D/g, '');
       if (digits.length < 10) {
         setError('Insira o número completo com DDD.');
@@ -188,7 +189,7 @@ export default function SmartForm() {
       }
     }
 
-    if (currentQuestion.id === 'cep') {
+    if (activeQuestion.id === 'cep') {
       const digits = value.replace(/\D/g, '');
       if (digits.length !== 8) {
         setError('O CEP deve ter 8 números.');
@@ -220,10 +221,10 @@ export default function SmartForm() {
 
   const handleChange = (value) => {
     let formattedValue = value;
-    if (currentQuestion.mask === 'phone') formattedValue = maskPhone(value);
-    if (currentQuestion.mask === 'cep') formattedValue = maskCEP(value);
+    if (activeQuestion.mask === 'phone') formattedValue = maskPhone(value);
+    if (activeQuestion.mask === 'cep') formattedValue = maskCEP(value);
     
-    setFormData({ ...formData, [currentQuestion.id]: formattedValue });
+    setFormData({ ...formData, [activeQuestion.id]: formattedValue });
     if (error) setError('');
   };
 
@@ -238,7 +239,6 @@ export default function SmartForm() {
       setIsFinished(true);
     } catch (err) {
       console.error('Erro ao salvar:', err);
-      // Fallback para não travar o usuário se a coluna nova não existir ainda
       setIsFinished(true);
     } finally {
       setIsSubmitting(false);
@@ -273,28 +273,28 @@ export default function SmartForm() {
         <div style={{ maxWidth: '600px', width: '100%', background: '#fff', borderRadius: '32px', padding: '40px', boxShadow: '0 20px 60px rgba(0,0,0,0.05)', position: 'relative' }}>
           
           <div style={{ marginBottom: '10px', color: '#3d5afe', fontWeight: 600, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            {currentQuestion.section}
+            {activeQuestion.section}
           </div>
 
           <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '30px', lineHeight: '1.3', color: '#1a1a1a' }}>
-            {currentQuestion.label}
+            {activeQuestion.label}
           </h2>
 
           <div style={{ marginBottom: '40px' }}>
-            {currentQuestion.type === 'select' ? (
+            {activeQuestion.type === 'select' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {currentQuestion.options.map((opt) => (
+                {activeQuestion.options.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => { 
-                      setFormData({ ...formData, [currentQuestion.id]: opt });
+                      setFormData({ ...formData, [activeQuestion.id]: opt });
                       setTimeout(handleNext, 300); 
                     }}
                     style={{
                       padding: '16px 20px',
                       borderRadius: '16px',
-                      border: `2px solid ${formData[currentQuestion.id] === opt ? '#3d5afe' : '#f0f0f0'}`,
-                      background: formData[currentQuestion.id] === opt ? '#e8eaf6' : '#fff',
+                      border: `2px solid ${formData[activeQuestion.id] === opt ? '#3d5afe' : '#f0f0f0'}`,
+                      background: formData[activeQuestion.id] === opt ? '#e8eaf6' : '#fff',
                       textAlign: 'left',
                       fontSize: '1rem',
                       fontWeight: 500,
@@ -309,11 +309,11 @@ export default function SmartForm() {
             ) : (
               <div style={{ position: 'relative' }}>
                 <input
-                  type={currentQuestion.type}
-                  name={currentQuestion.id}
-                  autoComplete={currentQuestion.autoComplete || 'off'}
-                  placeholder={currentQuestion.placeholder}
-                  value={formData[currentQuestion.id] || ''}
+                  type={activeQuestion.type}
+                  name={activeQuestion.id}
+                  autoComplete={activeQuestion.autoComplete || 'off'}
+                  placeholder={activeQuestion.placeholder}
+                  value={formData[activeQuestion.id] || ''}
                   onChange={(e) => handleChange(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleNext()}
                   autoFocus
@@ -346,11 +346,11 @@ export default function SmartForm() {
               <ChevronLeft size={20} /> Voltar
             </button>
 
-            {currentQuestion.type !== 'select' && (
+            {activeQuestion.type !== 'select' && (
               <button 
                 className="btn-primary" 
                 onClick={handleNext}
-                disabled={!formData[currentQuestion.id] || isSubmitting}
+                disabled={!formData[activeQuestion.id] || isSubmitting}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}
               >
                 {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestions.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
