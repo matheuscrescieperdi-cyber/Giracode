@@ -29,51 +29,55 @@ export default function PublicQRPage() {
       <div style={{ position: 'fixed', bottom: '-10%', right: '-10%', width: '30%', height: '30%', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
 
       <div style={{ position: 'relative', zIndex: 10 }}>
-        <img src="/logo.png" alt="Gira CODE" style={{ width: '120px', marginBottom: '1.5rem', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }} />
+        <div style={{ width: '100px', height: '100px', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="Gira CODE" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }} />
+        </div>
         
         <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-1px' }}>
           Gira <span style={{ color: '#ffd600' }}>CODE</span>
         </h1>
-        <p style={{ fontSize: '1.4rem', opacity: 0.9, marginBottom: '3rem', fontWeight: 500 }}>
+        <p style={{ fontSize: '1.2rem', opacity: 0.9, marginBottom: '3rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
           Escaneie e participe das nossas ações! 🦒✨
         </p>
 
         <div style={{ 
           background: '#fff', 
-          padding: '2.5rem', 
-          borderRadius: '40px', 
+          padding: '2rem', 
+          borderRadius: '48px', 
           boxShadow: '0 30px 60px rgba(0,0,0,0.3)',
-          display: 'inline-block',
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           position: 'relative'
         }}>
-          <div style={{ position: 'absolute', top: '-15px', right: '-15px', background: '#ffd600', color: '#000', padding: '8px 15px', borderRadius: '15px', fontWeight: 800, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Sparkles size={16} /> NOVIDADE
+          <div style={{ position: 'absolute', top: '-12px', right: '10%', background: '#ffd600', color: '#000', padding: '6px 14px', borderRadius: '12px', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+            <Sparkles size={14} /> NOVIDADE
           </div>
 
-          <QRCodeSVG 
-            value={scanUrl} 
-            size={280} 
-            level="H"
-            includeMargin={true}
-            imageSettings={{
-              src: "/logo.png",
-              x: undefined,
-              y: undefined,
-              height: 60,
-              width: 60,
-              excavate: true,
-            }}
-          />
+          <div style={{ padding: '10px', background: '#fff', borderRadius: '20px' }}>
+            <QRCodeSVG 
+              value={scanUrl} 
+              size={260} 
+              level="H"
+              includeMargin={false}
+              imageSettings={{
+                src: "/logo.png",
+                height: 50,
+                width: 50,
+                excavate: true,
+              }}
+            />
+          </div>
           
-          <div style={{ marginTop: '1.5rem', color: '#333', fontWeight: 600, fontSize: '1.1rem' }}>
+          <div style={{ marginTop: '1.5rem', color: '#333', fontWeight: 600, fontSize: '1rem', opacity: 0.8 }}>
             Aponte a câmera do seu celular
           </div>
         </div>
 
-        <div style={{ marginTop: '4rem', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.7, fontSize: '0.9rem' }}>
-          <div style={{ width: '40px', height: '1px', background: '#fff' }} />
+        <div style={{ marginTop: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', opacity: 0.6, fontSize: '0.8rem', width: '100%' }}>
+          <div style={{ width: '30px', height: '1px', background: '#fff' }} />
           PRESENÇA DIGITAL • CRESCI E PERDI
-          <div style={{ width: '40px', height: '1px', background: '#fff' }} />
+          <div style={{ width: '30px', height: '1px', background: '#fff' }} />
         </div>
       </div>
     </div>
