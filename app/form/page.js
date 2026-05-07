@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-// Versão 1.3 - Fix Crítico: Lógica de pergunta dinâmica sem mutação
+// Versão 1.4 - Padronização total de termos e correção definitiva de lógica
 const QUESTIONS_TEMPLATE = [
   { 
     id: 'nome', 
@@ -15,7 +15,7 @@ const QUESTIONS_TEMPLATE = [
   },
   { 
     id: 'parentesco', 
-    label: 'Qual o seu parentesco com os pequenos?', 
+    label: 'Qual o seu parentesco com os filhos?', 
     type: 'select', 
     options: ['Mãe', 'Pai', 'Avó / Avô', 'Tia / Tio', 'Outro'],
     section: 'Dados Básicos'
@@ -57,7 +57,7 @@ const QUESTIONS_TEMPLATE = [
     id: 'sexo_filhos', 
     label: 'Qual o sexo?', 
     type: 'select', 
-    options: ['Menino', 'Menina'], // Preenchimento inicial para evitar vazio
+    options: ['Menino', 'Menina'], 
     section: 'Sobre sua família'
   },
   { 
@@ -104,8 +104,8 @@ export default function SmartForm() {
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. Filtrar perguntas visíveis
-  const visibleQuestions = QUESTIONS_TEMPLATE.filter(q => {
+  // 1. Filtrar perguntas visíveis (Sempre usando o template base)
+  const visibleQuestionsBase = QUESTIONS_TEMPLATE.filter(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       return qtd === '1 filho' || qtd === '2 filhos' || qtd === '3 ou mais';
@@ -113,11 +113,9 @@ export default function SmartForm() {
     return true;
   });
 
-  // 2. Pegar a questão atual
-  const rawQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
-
-  // 3. Aplicar lógica dinâmica de labels e opções (Sem mutar o template!)
-  const getActiveQuestion = (q) => {
+  // 2. Resolver a questão atual com lógica dinâmica
+  const getResolvedQuestion = (index) => {
+    const q = visibleQuestionsBase[index] || visibleQuestionsBase[0];
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       if (qtd === '1 filho') {
@@ -129,7 +127,7 @@ export default function SmartForm() {
       } else {
         return {
           ...q,
-          label: 'Quais os sexos dos pequenos?',
+          label: 'Quais os sexos dos seus filhos?',
           options: ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas']
         };
       }
@@ -137,8 +135,8 @@ export default function SmartForm() {
     return q;
   };
 
-  const activeQuestion = getActiveQuestion(rawQuestion);
-  const progress = ((currentStep + 1) / visibleQuestions.length) * 100;
+  const activeQuestion = getResolvedQuestion(currentStep);
+  const progress = ((currentStep + 1) / visibleQuestionsBase.length) * 100;
 
   const maskPhone = (value) => {
     let clean = value.replace(/\D/g, '');
@@ -177,7 +175,7 @@ export default function SmartForm() {
 
   const handleNext = () => {
     if (validate()) {
-      if (currentStep < visibleQuestions.length - 1) {
+      if (currentStep < visibleQuestionsBase.length - 1) {
         setCurrentStep(currentStep + 1);
         setError('');
       } else {
@@ -315,13 +313,13 @@ export default function SmartForm() {
             </button>
             {activeQuestion.type !== 'select' && (
               <button className="btn-primary" onClick={handleNext} disabled={!formData[activeQuestion.id] || isSubmitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}>
-                {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestions.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
+                {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestionsBase.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
               </button>
             )}
           </div>
           
           <div style={{ marginTop: '30px', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>
-            Pergunta {currentStep + 1} de {visibleQuestions.length}
+            Pergunta {currentStep + 1} de {visibleQuestionsBase.length}
           </div>
         </div>
       </main>
