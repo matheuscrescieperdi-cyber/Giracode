@@ -186,8 +186,6 @@ export default function SmartForm() {
       setIsFinished(true);
     } catch (err) {
       console.error('Erro ao salvar:', err);
-      // Tentativa de salvar mesmo com erro de coluna (fallback para metadata futuramente se necessário)
-      alert('Cadastro realizado! (Nota: Se você adicionou perguntas novas, lembre-se de atualizar as colunas no Supabase).');
       setIsFinished(true);
     } finally {
       setIsSubmitting(false);
