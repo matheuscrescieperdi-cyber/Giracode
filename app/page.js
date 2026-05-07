@@ -4,7 +4,13 @@ import { QrCode, Sparkles } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function PublicQRPage() {
-  const scanUrl = "https://giracode.netlify.app/api/scan";
+  const [scanUrl, setScanUrl] = React.useState("");
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setScanUrl(`${window.location.origin}/api/scan`);
+    }
+  }, []);
 
   return (
     <div style={{ 
