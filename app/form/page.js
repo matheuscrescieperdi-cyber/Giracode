@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-// Versão 1.5 - Multi-select para idades e textos humanizados
+// Versão 1.7 - Reordenação de fluxo: Parentesco movido para o final da seção de família
 const QUESTIONS_TEMPLATE = [
   { 
     id: 'nome', 
@@ -12,13 +12,6 @@ const QUESTIONS_TEMPLATE = [
     placeholder: 'Digite seu nome aqui...', 
     section: 'Dados Básicos',
     autoComplete: 'name'
-  },
-  { 
-    id: 'parentesco', 
-    label: 'Qual o seu parentesco com as crianças?', 
-    type: 'select', 
-    options: ['Mãe', 'Pai', 'Avó / Avô', 'Tia / Tio', 'Outro'],
-    section: 'Dados Básicos'
   },
   { 
     id: 'whatsapp', 
@@ -76,6 +69,13 @@ const QUESTIONS_TEMPLATE = [
     section: 'Sobre sua família'
   },
   { 
+    id: 'parentesco', 
+    label: 'Qual o seu parentesco com as crianças?', 
+    type: 'select', 
+    options: ['Mãe', 'Pai', 'Avó / Avô', 'Tia / Tio', 'Outro'],
+    section: 'Sobre sua família'
+  },
+  { 
     id: 'relacao', 
     label: 'Você já conhece a Cresci e Perdi?', 
     type: 'select', 
@@ -128,7 +128,7 @@ export default function SmartForm() {
       } else {
         return {
           ...q,
-          label: 'Seus filhos são...',
+          label: 'Os seus filhos são...',
           options: ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas']
         };
       }
