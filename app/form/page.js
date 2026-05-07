@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-// Versão 1.4 - Padronização total de termos e correção definitiva de lógica
+// Versão 1.5 - Multi-select para idades e textos humanizados
 const QUESTIONS_TEMPLATE = [
   { 
     id: 'nome', 
@@ -15,7 +15,7 @@ const QUESTIONS_TEMPLATE = [
   },
   { 
     id: 'parentesco', 
-    label: 'Qual o seu parentesco com os filhos?', 
+    label: 'Qual o seu parentesco com as crianças?', 
     type: 'select', 
     options: ['Mãe', 'Pai', 'Avó / Avô', 'Tia / Tio', 'Outro'],
     section: 'Dados Básicos'
@@ -62,9 +62,10 @@ const QUESTIONS_TEMPLATE = [
   },
   { 
     id: 'fase', 
-    label: 'Qual a idade do seu filho(a) mais novo(a)?', 
-    type: 'select', 
+    label: 'Qual a idade dos seus filhos?', 
+    type: 'multiselect', 
     options: ['Gestante', '0 a 12 meses', '1 a 3 anos', '4 a 6 anos', '7 a 10 anos', '11 a 16 anos', 'Não tenho filhos'],
+    note: 'Você pode marcar mais de uma opção',
     section: 'Sobre sua família'
   },
   { 
@@ -104,7 +105,7 @@ export default function SmartForm() {
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. Filtrar perguntas visíveis (Sempre usando o template base)
+  // 1. Filtrar perguntas visíveis
   const visibleQuestionsBase = QUESTIONS_TEMPLATE.filter(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
@@ -121,13 +122,13 @@ export default function SmartForm() {
       if (qtd === '1 filho') {
         return {
           ...q,
-          label: 'É um menino ou uma menina?',
+          label: 'O seu filho é...',
           options: ['Menino', 'Menina']
         };
       } else {
         return {
           ...q,
-          label: 'Quais os sexos dos seus filhos?',
+          label: 'Seus filhos são...',
           options: ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas']
         };
       }
@@ -155,7 +156,7 @@ export default function SmartForm() {
 
   const validate = () => {
     const value = formData[activeQuestion.id] || '';
-    if (activeQuestion.type === 'select') return true;
+    if (activeQuestion.type === 'select' || activeQuestion.type === 'multiselect') return true;
     if (!value) return false;
     if (activeQuestion.id === 'email') {
       const re = /\S+@\S+\.\S+/;
@@ -197,6 +198,17 @@ export default function SmartForm() {
     if (activeQuestion.mask === 'cep') formattedValue = maskCEP(value);
     setFormData({ ...formData, [activeQuestion.id]: formattedValue });
     if (error) setError('');
+  };
+
+  const toggleMultiSelect = (opt) => {
+    const currentValues = formData[activeQuestion.id] ? formData[activeQuestion.id].split(', ') : [];
+    let newValues;
+    if (currentValues.includes(opt)) {
+      newValues = currentValues.filter(v => v !== opt);
+    } else {
+      newValues = [...currentValues, opt];
+    }
+    setFormData({ ...formData, [activeQuestion.id]: newValues.join(', ') });
   };
 
   const handleSubmit = async () => {
@@ -246,35 +258,52 @@ export default function SmartForm() {
             {activeQuestion.section}
           </div>
 
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '30px', lineHeight: '1.3', color: '#1a1a1a' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '8px', lineHeight: '1.3', color: '#1a1a1a' }}>
             {activeQuestion.label}
           </h2>
 
-          <div style={{ marginBottom: '40px' }}>
-            {activeQuestion.type === 'select' ? (
+          {activeQuestion.note && (
+            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '24px' }}>
+              {activeQuestion.note}
+            </p>
+          )}
+
+          <div style={{ marginBottom: '40px', marginTop: activeQuestion.note ? '0' : '20px' }}>
+            {activeQuestion.type === 'select' || activeQuestion.type === 'multiselect' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {activeQuestion.options && activeQuestion.options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => { 
-                      setFormData({ ...formData, [activeQuestion.id]: opt });
-                      setTimeout(handleNext, 300); 
-                    }}
-                    style={{
-                      padding: '16px 20px',
-                      borderRadius: '16px',
-                      border: `2px solid ${formData[activeQuestion.id] === opt ? '#3d5afe' : '#f0f0f0'}`,
-                      background: formData[activeQuestion.id] === opt ? '#e8eaf6' : '#fff',
-                      textAlign: 'left',
-                      fontSize: '1rem',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {opt}
-                  </button>
-                ))}
+                {activeQuestion.options && activeQuestion.options.map((opt) => {
+                  const isSelected = formData[activeQuestion.id]?.split(', ').includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => { 
+                        if (activeQuestion.type === 'multiselect') {
+                          toggleMultiSelect(opt);
+                        } else {
+                          setFormData({ ...formData, [activeQuestion.id]: opt });
+                          setTimeout(handleNext, 300); 
+                        }
+                      }}
+                      style={{
+                        padding: '16px 20px',
+                        borderRadius: '16px',
+                        border: `2px solid ${isSelected ? '#3d5afe' : '#f0f0f0'}`,
+                        background: isSelected ? '#e8eaf6' : '#fff',
+                        textAlign: 'left',
+                        fontSize: '1rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      {opt}
+                      {isSelected && activeQuestion.type === 'multiselect' && <CheckCircle2 size={18} color="#3d5afe" />}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <div style={{ position: 'relative' }}>
@@ -311,8 +340,8 @@ export default function SmartForm() {
             <button onClick={handleBack} disabled={currentStep === 0} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: currentStep === 0 ? '#ccc' : '#666', cursor: 'pointer', fontWeight: 500 }}>
               <ChevronLeft size={20} /> Voltar
             </button>
-            {activeQuestion.type !== 'select' && (
-              <button className="btn-primary" onClick={handleNext} disabled={!formData[activeQuestion.id] || isSubmitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}>
+            {(activeQuestion.type !== 'select' || activeQuestion.type === 'multiselect') && (
+              <button className="btn-primary" onClick={handleNext} disabled={(activeQuestion.type !== 'multiselect' && !formData[activeQuestion.id]) || isSubmitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}>
                 {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestionsBase.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
               </button>
             )}
