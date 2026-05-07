@@ -347,8 +347,11 @@ export default function SmartForm() {
             )}
           </div>
           
-          <div style={{ marginTop: '30px', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>
-            Pergunta {currentStep + 1} de {visibleQuestionsBase.length}
+          <div style={{ marginTop: '30px', textAlign: 'center', color: '#666', fontSize: '0.9rem', fontStyle: 'italic', padding: '0 20px' }}>
+            {currentStep < 3 && "Vamos lá! Só mais alguns cliques... ✨"}
+            {currentStep >= 3 && currentStep < 7 && "Continue! O Carrinho de Controle Remoto pode ser seu! 🏎️"}
+            {currentStep >= 7 && currentStep < 10 && "Quase lá! Sua participação no sorteio está quase garantida! 🏁"}
+            {currentStep >= 10 && "Última pergunta! Vamos finalizar? 🎁"}
           </div>
         </div>
       </main>
