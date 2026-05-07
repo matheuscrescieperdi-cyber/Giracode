@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { QrCode, Sparkles } from 'lucide-react';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function PublicQRPage() {
   const scanUrl = "https://giracode.netlify.app/api/scan";
@@ -44,15 +44,15 @@ export default function PublicQRPage() {
             <Sparkles size={16} /> NOVIDADE
           </div>
 
-          <QRCode 
+          <QRCodeSVG 
             value={scanUrl} 
             size={280} 
             level="H"
             includeMargin={true}
             imageSettings={{
               src: "/logo.png",
-              x: null,
-              y: null,
+              x: undefined,
+              y: undefined,
               height: 60,
               width: 60,
               excavate: true,
