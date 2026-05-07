@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 
-// Versão 1.7 - Reordenação de fluxo: Parentesco movido para o final da seção de família
+// Versão 1.9 - LGPD: Política de Privacidade e Consentimento
 const QUESTIONS_TEMPLATE = [
   { 
     id: 'nome', 
@@ -95,6 +95,12 @@ const QUESTIONS_TEMPLATE = [
     type: 'select', 
     options: ['Sim, já vendi várias vezes', 'Sim, já vendi uma vez', 'Ainda não, mas tenho interesse', 'Prefiro doar ou guardar'],
     section: 'Sua experiência'
+  },
+  {
+    id: 'aceite_termos',
+    label: 'Consentimento e Privacidade',
+    type: 'consent',
+    section: 'Finalização'
   }
 ];
 
@@ -108,13 +114,10 @@ export default function SmartForm() {
   // 1. Filtrar perguntas visíveis
   const visibleQuestionsBase = QUESTIONS_TEMPLATE.filter(q => {
     const qtd = formData.qtd_filhos;
-    
-    // Se não tem filhos, pula as perguntas específicas de crianças
     if (qtd === 'Ainda não tenho filhos') {
       const skipIds = ['sexo_filhos', 'fase', 'escola', 'parentesco'];
       if (skipIds.includes(q.id)) return false;
     }
-
     if (q.id === 'sexo_filhos') {
       return qtd === '1 filho' || qtd === '2 filhos' || qtd === '3 ou mais';
     }
@@ -127,17 +130,9 @@ export default function SmartForm() {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       if (qtd === '1 filho') {
-        return {
-          ...q,
-          label: 'O seu filho é...',
-          options: ['Menino', 'Menina']
-        };
+        return { ...q, label: 'O seu filho é...', options: ['Menino', 'Menina'] };
       } else {
-        return {
-          ...q,
-          label: 'Os seus filhos são...',
-          options: ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas']
-        };
+        return { ...q, label: 'Os seus filhos são...', options: ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas'] };
       }
     }
     return q;
@@ -162,8 +157,12 @@ export default function SmartForm() {
   };
 
   const validate = () => {
-    const value = formData[activeQuestion.id] || '';
+    const value = formData[activeQuestion.id];
     if (activeQuestion.type === 'select' || activeQuestion.type === 'multiselect') return true;
+    if (activeQuestion.type === 'consent') {
+      if (!value) { setError('Você precisa aceitar os termos para continuar.'); return false; }
+      return true;
+    }
     if (!value) return false;
     if (activeQuestion.id === 'email') {
       const re = /\S+@\S+\.\S+/;
@@ -275,7 +274,7 @@ export default function SmartForm() {
             </p>
           )}
 
-          <div style={{ marginBottom: '40px', marginTop: activeQuestion.note ? '0' : '20px' }}>
+          <div style={{ marginBottom: '40px', marginTop: (activeQuestion.note || activeQuestion.type === 'consent') ? '0' : '20px' }}>
             {activeQuestion.type === 'select' || activeQuestion.type === 'multiselect' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {activeQuestion.options && activeQuestion.options.map((opt) => {
@@ -312,6 +311,24 @@ export default function SmartForm() {
                   );
                 })}
               </div>
+            ) : activeQuestion.type === 'consent' ? (
+              <div style={{ padding: '20px', background: '#f8faff', borderRadius: '20px', border: '1px solid #eef2ff' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                  <input 
+                    type="checkbox" 
+                    id="privacy-check"
+                    checked={formData.aceite_termos || false}
+                    onChange={(e) => setFormData({ ...formData, aceite_termos: e.target.checked })}
+                    style={{ width: '22px', height: '22px', marginTop: '4px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="privacy-check" style={{ color: '#444', fontSize: '0.95rem', lineHeight: '1.5', cursor: 'pointer' }}>
+                    Eu concordo com a <strong>Política de Privacidade</strong> e aceito receber promoções, novidades e ofertas exclusivas da Cresci e Perdi via WhatsApp e E-mail.
+                  </label>
+                </div>
+                <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: '#3d5afe', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <ShieldCheck size={18} /> Seus dados estão protegidos pela LGPD
+                </div>
+              </div>
             ) : (
               <div style={{ position: 'relative' }}>
                 <input
@@ -347,9 +364,9 @@ export default function SmartForm() {
             <button onClick={handleBack} disabled={currentStep === 0} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: currentStep === 0 ? '#ccc' : '#666', cursor: 'pointer', fontWeight: 500 }}>
               <ChevronLeft size={20} /> Voltar
             </button>
-            {(activeQuestion.type !== 'select' || activeQuestion.type === 'multiselect') && (
-              <button className="btn-primary" onClick={handleNext} disabled={(activeQuestion.type !== 'multiselect' && !formData[activeQuestion.id]) || isSubmitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}>
-                {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestionsBase.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
+            {(activeQuestion.type !== 'select' || activeQuestion.type === 'multiselect' || activeQuestion.type === 'consent') && (
+              <button className="btn-primary" onClick={handleNext} disabled={(activeQuestion.type === 'text' && !formData[activeQuestion.id]) || isSubmitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}>
+                {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestionsBase.length - 1 ? 'Finalizar e Concorrer' : 'Próximo')} <ChevronRight size={20} />
               </button>
             )}
           </div>
