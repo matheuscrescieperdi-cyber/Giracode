@@ -107,8 +107,15 @@ export default function SmartForm() {
 
   // 1. Filtrar perguntas visíveis
   const visibleQuestionsBase = QUESTIONS_TEMPLATE.filter(q => {
+    const qtd = formData.qtd_filhos;
+    
+    // Se não tem filhos, pula as perguntas específicas de crianças
+    if (qtd === 'Ainda não tenho filhos') {
+      const skipIds = ['sexo_filhos', 'fase', 'escola', 'parentesco'];
+      if (skipIds.includes(q.id)) return false;
+    }
+
     if (q.id === 'sexo_filhos') {
-      const qtd = formData.qtd_filhos;
       return qtd === '1 filho' || qtd === '2 filhos' || qtd === '3 ou mais';
     }
     return true;
