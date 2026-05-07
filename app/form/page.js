@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-// Versão 1.2 - Correção de lógica e cache
+// Versão 1.3 - Fix Crítico: Lógica de pergunta dinâmica sem mutação
 const QUESTIONS_TEMPLATE = [
   { 
     id: 'nome', 
@@ -57,7 +57,7 @@ const QUESTIONS_TEMPLATE = [
     id: 'sexo_filhos', 
     label: 'Qual o sexo?', 
     type: 'select', 
-    options: [], 
+    options: ['Menino', 'Menina'], // Preenchimento inicial para evitar vazio
     section: 'Sobre sua família'
   },
   { 
@@ -104,14 +104,20 @@ export default function SmartForm() {
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
 
-  // Lógica de visibilidade e labels dinâmicos
+  // 1. Filtrar perguntas visíveis
   const visibleQuestions = QUESTIONS_TEMPLATE.filter(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       return qtd === '1 filho' || qtd === '2 filhos' || qtd === '3 ou mais';
     }
     return true;
-  }).map(q => {
+  });
+
+  // 2. Pegar a questão atual
+  const rawQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
+
+  // 3. Aplicar lógica dinâmica de labels e opções (Sem mutar o template!)
+  const getActiveQuestion = (q) => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       if (qtd === '1 filho') {
@@ -129,16 +135,14 @@ export default function SmartForm() {
       }
     }
     return q;
-  });
+  };
 
-  const activeQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
+  const activeQuestion = getActiveQuestion(rawQuestion);
   const progress = ((currentStep + 1) / visibleQuestions.length) * 100;
 
   const maskPhone = (value) => {
     let clean = value.replace(/\D/g, '');
-    if (clean.startsWith('55') && clean.length > 10) {
-      clean = clean.substring(2);
-    }
+    if (clean.startsWith('55') && clean.length > 10) clean = clean.substring(2);
     clean = clean.substring(0, 11);
     if (clean.length <= 10) {
       return clean.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1');
@@ -251,7 +255,7 @@ export default function SmartForm() {
           <div style={{ marginBottom: '40px' }}>
             {activeQuestion.type === 'select' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {activeQuestion.options.map((opt) => (
+                {activeQuestion.options && activeQuestion.options.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => { 
