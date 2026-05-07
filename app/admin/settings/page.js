@@ -32,12 +32,17 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ destinationUrl: finalUrl })
       });
+      
       if (res.ok) {
         setStatus('Configuração salva com sucesso!');
         setTimeout(() => setStatus(''), 3000);
+      } else {
+        const errorData = await res.json();
+        setStatus(`Erro: ${errorData.error || 'Falha ao salvar'}`);
       }
     } catch (error) {
-      setStatus('Erro ao salvar.');
+      console.error('Save Error:', error);
+      setStatus('Erro de conexão ao salvar.');
     }
   };
 
