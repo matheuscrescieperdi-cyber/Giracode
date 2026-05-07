@@ -97,18 +97,23 @@ export default function PublicQRPage() {
         }
 
         .logo-wrapper {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 1rem;
+          width: 90px;
+          height: 90px;
+          margin: 0 auto 1.5rem;
           display: flex;
           align-items: center;
           justify-content: center;
+          background: #fff;
+          border-radius: 50%;
+          padding: 10px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+          border: 3px solid rgba(255,255,255,0.3);
         }
 
         .main-logo {
-          max-width: 100%;
-          max-height: 100%;
-          filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+          max-width: 85%;
+          max-height: 85%;
+          object-fit: contain;
         }
 
         .title {
