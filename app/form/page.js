@@ -48,9 +48,9 @@ const QUESTIONS_TEMPLATE = [
   },
   { 
     id: 'qtd_filhos', 
-    label: 'Quantos pequenos você tem?', 
+    label: 'Quantos filhos você tem?', 
     type: 'select', 
-    options: ['1 Pequeno', '2 Pequenos', '3 ou mais', 'Bebê a caminho', 'Ainda não tenho filhos'],
+    options: ['1 filho', '2 filhos', '3 ou mais', 'Bebê a caminho', 'Ainda não tenho filhos'],
     section: 'Sobre sua família' 
   },
   { 
@@ -108,13 +108,13 @@ export default function SmartForm() {
   const visibleQuestions = QUESTIONS_TEMPLATE.filter(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
-      return qtd === '1 Pequeno' || qtd === '2 Pequenos' || qtd === '3 ou mais';
+      return qtd === '1 filho' || qtd === '2 filhos' || qtd === '3 ou mais';
     }
     return true;
   }).map(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
-      if (qtd === '1 Pequeno') {
+      if (qtd === '1 filho') {
         return {
           ...q,
           label: 'É um menino ou uma menina?',
