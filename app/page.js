@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { QrCode, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function PublicQRPage() {
@@ -13,73 +13,189 @@ export default function PublicQRPage() {
   }, []);
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #3d5afe 0%, #304ffe 100%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      color: '#fff',
-      textAlign: 'center'
-    }}>
+    <div className="container">
       {/* Círculos de fundo decorativos */}
-      <div style={{ position: 'fixed', top: '-10%', left: '-10%', width: '40%', height: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
-      <div style={{ position: 'fixed', bottom: '-10%', right: '-10%', width: '30%', height: '30%', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+      <div className="bg-circle circle-1" />
+      <div className="bg-circle circle-2" />
 
-      <div style={{ position: 'relative', zIndex: 10 }}>
-        <div style={{ width: '100px', height: '100px', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/logo.png" alt="Gira CODE" style={{ maxWidth: '100%', maxHeight: '100%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }} />
+      <div className="content">
+        <div className="logo-wrapper">
+          <img src="/logo.png" alt="Gira CODE" className="main-logo" />
         </div>
         
-        <h1 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-1px' }}>
-          Gira <span style={{ color: '#ffd600' }}>CODE</span>
+        <h1 className="title">
+          Gira <span className="highlight">CODE</span>
         </h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, marginBottom: '3rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <p className="subtitle">
           Escaneie e participe das nossas ações! 🦒✨
         </p>
 
-        <div style={{ 
-          background: '#fff', 
-          padding: '2rem', 
-          borderRadius: '48px', 
-          boxShadow: '0 30px 60px rgba(0,0,0,0.3)',
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          position: 'relative'
-        }}>
-          <div style={{ position: 'absolute', top: '-12px', right: '10%', background: '#ffd600', color: '#000', padding: '6px 14px', borderRadius: '12px', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+        <div className="qr-card">
+          <div className="badge">
             <Sparkles size={14} /> NOVIDADE
           </div>
 
-          <div style={{ padding: '10px', background: '#fff', borderRadius: '20px' }}>
+          <div className="qr-wrapper">
             <QRCodeSVG 
-              value={scanUrl} 
-              size={260} 
+              value={scanUrl || "https://giracode.vercel.app"} 
+              size={240} 
               level="H"
               includeMargin={false}
+              className="qr-code"
               imageSettings={{
                 src: "/logo.png",
-                height: 50,
-                width: 50,
+                height: 45,
+                width: 45,
                 excavate: true,
               }}
             />
           </div>
           
-          <div style={{ marginTop: '1.5rem', color: '#333', fontWeight: 600, fontSize: '1rem', opacity: 0.8 }}>
+          <p className="instruction">
             Aponte a câmera do seu celular
-          </div>
+          </p>
         </div>
 
-        <div style={{ marginTop: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', opacity: 0.6, fontSize: '0.8rem', width: '100%' }}>
-          <div style={{ width: '30px', height: '1px', background: '#fff' }} />
-          PRESENÇA DIGITAL • CRESCI E PERDI
-          <div style={{ width: '30px', height: '1px', background: '#fff' }} />
+        <div className="footer-line">
+          <div className="line" />
+          <span>PRESENÇA DIGITAL • CRESCI E PERDI</span>
+          <div className="line" />
         </div>
       </div>
+
+      <style jsx>{`
+        .container {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #3d5afe 0%, #304ffe 100%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          color: #fff;
+          text-align: center;
+          overflow: hidden;
+          position: relative;
+          font-family: sans-serif;
+        }
+
+        .bg-circle {
+          position: absolute;
+          background: rgba(255,255,255,0.05);
+          border-radius: 50%;
+          z-index: 0;
+        }
+
+        .circle-1 { top: -10%; left: -10%; width: 40vw; height: 40vw; }
+        .circle-2 { bottom: -10%; right: -10%; width: 30vw; height: 30vw; }
+
+        .content {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 500px;
+        }
+
+        .logo-wrapper {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .main-logo {
+          max-width: 100%;
+          max-height: 100%;
+          filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        }
+
+        .title {
+          font-size: clamp(2rem, 8vw, 3rem);
+          font-weight: 800;
+          margin-bottom: 0.5rem;
+          letter-spacing: -1px;
+        }
+
+        .highlight { color: #ffd600; }
+
+        .subtitle {
+          font-size: clamp(0.9rem, 4vw, 1.2rem);
+          opacity: 0.9;
+          margin-bottom: 2.5rem;
+          font-weight: 500;
+        }
+
+        .qr-card {
+          background: #fff;
+          padding: 2rem;
+          border-radius: 40px;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+          display: inline-flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          width: auto;
+          max-width: 90vw;
+        }
+
+        .badge {
+          position: absolute;
+          top: -12px;
+          background: #ffd600;
+          color: #000;
+          padding: 6px 14px;
+          border-radius: 12px;
+          font-weight: 800;
+          font-size: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          right: 20px;
+        }
+
+        .qr-wrapper {
+          padding: 10px;
+          background: #fff;
+          border-radius: 15px;
+        }
+
+        :global(.qr-code) {
+          max-width: 100%;
+          height: auto !important;
+        }
+
+        .instruction {
+          margin-top: 1.2rem;
+          color: #333;
+          font-weight: 600;
+          font-size: 0.9rem;
+          opacity: 0.8;
+        }
+
+        .footer-line {
+          margin-top: 3rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 15px;
+          opacity: 0.6;
+          font-size: 0.7rem;
+          width: 100%;
+          letter-spacing: 1px;
+        }
+
+        .line { width: 20px; height: 1px; background: #fff; }
+
+        @media (max-width: 480px) {
+          .qr-card { padding: 1.5rem; border-radius: 32px; }
+          .logo-wrapper { width: 60px; height: 60px; }
+          .title { margin-bottom: 0.2rem; }
+          .subtitle { margin-bottom: 1.5rem; }
+        }
+      `}</style>
     </div>
   );
 }
