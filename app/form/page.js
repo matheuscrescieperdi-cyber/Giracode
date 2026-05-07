@@ -46,11 +46,19 @@ const QUESTIONS = [
     autoComplete: 'postal-code'
   },
   { 
-    id: 'pequenos', 
-    label: 'Você é mãe/pai de...', 
+    id: 'qtd_filhos', 
+    label: 'Quantos pequenos você tem?', 
     type: 'select', 
-    options: ['Menino(s)', 'Menina(s)', 'Menino(s) e menina(s)', 'Bebê a caminho', 'Não tenho filhos'],
+    options: ['1 Pequeno', '2 Pequenos', '3 ou mais', 'Bebê a caminho', 'Ainda não tenho filhos'],
     section: 'Sobre sua família' 
+  },
+  { 
+    id: 'sexo_filhos', 
+    label: 'Qual o sexo?', // Será ajustado dinamicamente no componente
+    type: 'select', 
+    options: [], // Será preenchido dinamicamente
+    section: 'Sobre sua família',
+    dependsOn: 'qtd_filhos'
   },
   { 
     id: 'fase', 
@@ -96,22 +104,66 @@ export default function SmartForm() {
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
 
-  const progress = ((currentStep + 1) / QUESTIONS.length) * 100;
-  const currentQuestion = QUESTIONS[currentStep];
+  // Lógica para filtrar as perguntas com base nas respostas anteriores
+  const getVisibleQuestions = () => {
+    return QUESTIONS.filter(q => {
+      if (q.id === 'sexo_filhos') {
+        const qtd = formData.qtd_filhos;
+        return qtd === '1 Pequeno' || qtd === '2 Pequenos' || qtd === '3 ou mais';
+      }
+      return true;
+    });
+  };
+
+  const visibleQuestions = getVisibleQuestions();
+  const currentQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
+  const progress = ((currentStep + 1) / visibleQuestions.length) * 100;
+
+  // Ajustar opções da pergunta de sexo dinamicamente
+  useEffect(() => {
+    if (currentQuestion.id === 'sexo_filhos') {
+      const qtd = formData.qtd_filhos;
+      if (qtd === '1 Pequeno') {
+        currentQuestion.label = 'É um menino ou uma menina?';
+        currentQuestion.options = ['Menino', 'Menina'];
+      } else {
+        currentQuestion.label = 'Quais os sexos dos pequenos?';
+        currentQuestion.options = ['Apenas Meninos', 'Apenas Meninas', 'Meninos e Meninas'];
+      }
+    }
+  }, [currentQuestion, formData.qtd_filhos]);
 
   const maskPhone = (value) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{5})(\d)/, '$1-$2')
-      .replace(/(-\d{4})(\d+?)$/, '$1');
+    let clean = value.replace(/\D/g, '');
+    
+    // Se começar com 55 e tiver mais de 10 dígitos, remove o 55
+    if (clean.startsWith('55') && clean.length > 10) {
+      clean = clean.substring(2);
+    }
+
+    // Limita a 11 dígitos (DDD + 9 dígitos)
+    clean = clean.substring(0, 11);
+
+    if (clean.length <= 10) {
+      // (11) 4444-4444
+      return clean
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2')
+        .replace(/(-\d{4})\d+?$/, '$1');
+    } else {
+      // (11) 99999-9999
+      return clean
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .replace(/(-\d{4})\d+?$/, '$1');
+    }
   };
 
   const maskCEP = (value) => {
     return value
       .replace(/\D/g, '')
-      .replace(/(\d{5})(\d)/, '$1-$2')
-      .replace(/(-\d{3})(\d+?)$/, '$1');
+      .substring(0, 8)
+      .replace(/(\d{5})(\d)/, '$1-$2');
   };
 
   const validate = () => {
@@ -150,7 +202,7 @@ export default function SmartForm() {
 
   const handleNext = () => {
     if (validate()) {
-      if (currentStep < QUESTIONS.length - 1) {
+      if (currentStep < visibleQuestions.length - 1) {
         setCurrentStep(currentStep + 1);
         setError('');
       } else {
@@ -186,6 +238,7 @@ export default function SmartForm() {
       setIsFinished(true);
     } catch (err) {
       console.error('Erro ao salvar:', err);
+      // Fallback para não travar o usuário se a coluna nova não existir ainda
       setIsFinished(true);
     } finally {
       setIsSubmitting(false);
@@ -300,13 +353,13 @@ export default function SmartForm() {
                 disabled={!formData[currentQuestion.id] || isSubmitting}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}
               >
-                {isSubmitting ? 'Enviando...' : (currentStep === QUESTIONS.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
+                {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestions.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
               </button>
             )}
           </div>
           
           <div style={{ marginTop: '30px', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>
-            Pergunta {currentStep + 1} de {QUESTIONS.length}
+            Pergunta {currentStep + 1} de {visibleQuestions.length}
           </div>
         </div>
       </main>

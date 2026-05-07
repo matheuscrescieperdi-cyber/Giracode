@@ -14,6 +14,8 @@ CREATE TABLE leads (
   whatsapp TEXT,
   email TEXT,
   cep TEXT,
+  qtd_filhos TEXT,
+  sexo_filhos TEXT,
   pequenos TEXT,
   fase TEXT,
   escola TEXT,
@@ -21,6 +23,10 @@ CREATE TABLE leads (
   origem TEXT,
   desapego TEXT
 );
+
+-- Para atualizar uma tabela já existente:
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS qtd_filhos TEXT;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS sexo_filhos TEXT;
 
 -- Ative o acesso público (opcional, dependendo da sua segurança)
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
