@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const QUESTIONS = [
+// Versão 1.2 - Correção de lógica e cache
+const QUESTIONS_TEMPLATE = [
   { 
     id: 'nome', 
     label: 'Para começar, qual o seu nome completo?', 
@@ -54,9 +55,9 @@ const QUESTIONS = [
   },
   { 
     id: 'sexo_filhos', 
-    label: '', // Dinâmico
+    label: 'Qual o sexo?', 
     type: 'select', 
-    options: [], // Dinâmico
+    options: [], 
     section: 'Sobre sua família'
   },
   { 
@@ -103,20 +104,14 @@ export default function SmartForm() {
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
 
-  // Lógica para filtrar as perguntas com base nas respostas anteriores
-  const visibleQuestions = QUESTIONS.filter(q => {
+  // Lógica de visibilidade e labels dinâmicos
+  const visibleQuestions = QUESTIONS_TEMPLATE.filter(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       return qtd === '1 Pequeno' || qtd === '2 Pequenos' || qtd === '3 ou mais';
     }
     return true;
-  });
-
-  const currentQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
-  const progress = ((currentStep + 1) / visibleQuestions.length) * 100;
-
-  // Obter labels e opções dinâmicas sem mutar o objeto original
-  const getDynamicQuestion = (q) => {
+  }).map(q => {
     if (q.id === 'sexo_filhos') {
       const qtd = formData.qtd_filhos;
       if (qtd === '1 Pequeno') {
@@ -134,69 +129,44 @@ export default function SmartForm() {
       }
     }
     return q;
-  };
+  });
 
-  const activeQuestion = getDynamicQuestion(currentQuestion);
+  const activeQuestion = visibleQuestions[currentStep] || visibleQuestions[0];
+  const progress = ((currentStep + 1) / visibleQuestions.length) * 100;
 
   const maskPhone = (value) => {
     let clean = value.replace(/\D/g, '');
-    
     if (clean.startsWith('55') && clean.length > 10) {
       clean = clean.substring(2);
     }
-
     clean = clean.substring(0, 11);
-
     if (clean.length <= 10) {
-      return clean
-        .replace(/(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{4})(\d)/, '$1-$2')
-        .replace(/(-\d{4})\d+?$/, '$1');
+      return clean.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1');
     } else {
-      return clean
-        .replace(/(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{5})(\d)/, '$1-$2')
-        .replace(/(-\d{4})\d+?$/, '$1');
+      return clean.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1');
     }
   };
 
   const maskCEP = (value) => {
-    return value
-      .replace(/\D/g, '')
-      .substring(0, 8)
-      .replace(/(\d{5})(\d)/, '$1-$2');
+    return value.replace(/\D/g, '').substring(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
   };
 
   const validate = () => {
     const value = formData[activeQuestion.id] || '';
-    
     if (activeQuestion.type === 'select') return true;
     if (!value) return false;
-
     if (activeQuestion.id === 'email') {
       const re = /\S+@\S+\.\S+/;
-      if (!re.test(value)) {
-        setError('Por favor, insira um e-mail válido.');
-        return false;
-      }
+      if (!re.test(value)) { setError('Por favor, insira um e-mail válido.'); return false; }
     }
-
     if (activeQuestion.id === 'whatsapp') {
       const digits = value.replace(/\D/g, '');
-      if (digits.length < 10) {
-        setError('Insira o número completo com DDD.');
-        return false;
-      }
+      if (digits.length < 10) { setError('Insira o número completo com DDD.'); return false; }
     }
-
     if (activeQuestion.id === 'cep') {
       const digits = value.replace(/\D/g, '');
-      if (digits.length !== 8) {
-        setError('O CEP deve ter 8 números.');
-        return false;
-      }
+      if (digits.length !== 8) { setError('O CEP deve ter 8 números.'); return false; }
     }
-
     setError('');
     return true;
   };
@@ -223,7 +193,6 @@ export default function SmartForm() {
     let formattedValue = value;
     if (activeQuestion.mask === 'phone') formattedValue = maskPhone(value);
     if (activeQuestion.mask === 'cep') formattedValue = maskCEP(value);
-    
     setFormData({ ...formData, [activeQuestion.id]: formattedValue });
     if (error) setError('');
   };
@@ -234,7 +203,6 @@ export default function SmartForm() {
       const { error } = await supabase
         .from('leads')
         .insert([{ ...formData, created_at: new Date() }]);
-
       if (error) throw error;
       setIsFinished(true);
     } catch (err) {
@@ -338,21 +306,11 @@ export default function SmartForm() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button 
-              onClick={handleBack} 
-              disabled={currentStep === 0}
-              style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: currentStep === 0 ? '#ccc' : '#666', cursor: 'pointer', fontWeight: 500 }}
-            >
+            <button onClick={handleBack} disabled={currentStep === 0} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', color: currentStep === 0 ? '#ccc' : '#666', cursor: 'pointer', fontWeight: 500 }}>
               <ChevronLeft size={20} /> Voltar
             </button>
-
             {activeQuestion.type !== 'select' && (
-              <button 
-                className="btn-primary" 
-                onClick={handleNext}
-                disabled={!formData[activeQuestion.id] || isSubmitting}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}
-              >
+              <button className="btn-primary" onClick={handleNext} disabled={!formData[activeQuestion.id] || isSubmitting} style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: isSubmitting ? 0.7 : 1 }}>
                 {isSubmitting ? 'Enviando...' : (currentStep === visibleQuestions.length - 1 ? 'Finalizar' : 'Próximo')} <ChevronRight size={20} />
               </button>
             )}
@@ -363,24 +321,13 @@ export default function SmartForm() {
           </div>
         </div>
       </main>
-
       <footer style={{ padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#999' }}>
         Cresci e Perdi &copy; 2026 - Protegido por Gira CODE
       </footer>
-
       <style jsx global>{`
         body { background: #f5f7fb !important; font-family: sans-serif; }
         input:focus { outline: none; }
-        .btn-primary {
-          background: #3d5afe;
-          color: #fff;
-          padding: 12px 24px;
-          border-radius: 12px;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
+        .btn-primary { background: #3d5afe; color: #fff; padding: 12px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary:hover { background: #304ffe; }
         .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
       `}</style>
